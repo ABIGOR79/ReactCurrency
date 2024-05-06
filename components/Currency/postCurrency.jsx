@@ -1,5 +1,5 @@
 import styled from "styled-components/native";
-import { TextInput } from "react-native";
+
 
 const PostViewCard = styled.View`
   flex-direction: column;
@@ -12,6 +12,7 @@ const PostTextRates = styled.Text`
   font-size: 18px;
   margin: 10px;
   font-weight: 700;
+  color: ${props => props.isDarkMode ? 'white' : 'black'};
 `;
 
 const PostCardDetails = styled.View`
@@ -64,11 +65,11 @@ const PostDrop = styled.TextInput`
   border-radius:5px;
 `;
 
-export const PostCard = () => {
+export const PostCard = ({ isDarkMode }) => {
+  
   return (
     <PostViewCard>
-      <PostTextRates>Exchange Rates
-        </PostTextRates>
+      <PostTextRates isDarkMode={isDarkMode}>Exchange Rates</PostTextRates>
       <PostCardDetails>
         <PostCurrencyView>
           <PostTextChoose>Search Currency</PostTextChoose>

@@ -7,9 +7,17 @@ const appStyles = StyleSheet.create({
       flex: 1,
       flexdirection: 'column',
       justifyContent: 'center',
-      alignItems: 'start',     
+      alignItems: 'start',
+                
       
     },
+    lightMode: {
+    backgroundColor: 'white',
+  },
+
+  darkMode: {
+    backgroundColor: 'black',
+  },
 
     splashConainer:{
       flex:1,
@@ -42,7 +50,10 @@ const appStyles = StyleSheet.create({
       flex: 1,
       flexdirection: 'column',      
       alignItems: 'start',  
-    }    
+    },
+    flatListContent: {
+      paddingBottom: 20, // добавляем отступ снизу для FlatList
+    },    
   });
 
   export default appStyles;

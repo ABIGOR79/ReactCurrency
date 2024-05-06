@@ -1,16 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Image, StyleSheet, Button, TouchableOpacity, Text, NativeLinearGradient, StatusBar, Alert, FlatList } from 'react-native';
+import { View, Image, StyleSheet, ActivityIndicator, TouchableOpacity, Text, NativeLinearGradient, StatusBar, Alert, FlatList } from 'react-native';
 import appStyles from '../ReactCurrency/styles/styleApp';
 import styled from 'styled-components/native';
 import { useNavigation } from '@react-navigation/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { PostCard } from './components/postCurrency';
-import { PostList } from './components/postList';
-import { CurrencyCard} from './components/postDetailsCurrency';
+import { PostCard } from './components/Currency/postCurrency';
+import { PostList } from './components/Currency/postList';
+import { CurrencyCard} from './components/Details/postDetailsCurrency';
 import { useRoute } from '@react-navigation/native';
 import {URL, API_KEY, BASE_CURRENCY, getToday, getWeekAgo} from '../ReactCurrency/utils/utils'
+import BottomBar from './components/Currency/postBottomBar';
 
 
 // Компонент сплэш-экрана
@@ -32,6 +33,7 @@ const MainScreen = () => {
   };
   return (
     <View style={appStyles.container}>
+      {/* <StatusBar barStyle="dark-content" /> */}
       <StatusBar theme = "auto"/>
       <PostRates>
         <PostText>
@@ -50,37 +52,73 @@ const MainScreen = () => {
 
 const CurrencyScreen = () => {
   const [currencyData, setCurrencyData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const startDate = getWeekAgo();
+      const endDate = getToday();
+      const apiKey = API_KEY;
+      const baseCurrency = BASE_CURRENCY;
+
+      const url = `${URL}?base=${baseCurrency}&start_date=${startDate}&end_date=${endDate}&api_key=${apiKey}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const lastDate = Object.keys(data.response)[Object.keys(data.response).length - 1];
+      setCurrencyData(data.response[lastDate]);
+    } catch (error) {
+      console.error('Error fetching currency data:', error);
+      Alert.alert('Failed to get list of currencies');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const startDate = getWeekAgo();
-        const endDate = getToday();
-        const apiKey = API_KEY;
-        const baseCurrency = BASE_CURRENCY;
-    
-        const url = `${URL}?base=${baseCurrency}&start_date=${startDate}&end_date=${endDate}&api_key=${API_KEY}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        const lastDate = Object.keys(data.response)[Object.keys(data.response).length - 1]; // Получаем последнюю дату
-        setCurrencyData(data.response[lastDate]); // Устанавливаем данные за последний день в стейт
-      } catch (error) {
-        console.error('Error fetching currency data:', error);
-        Alert.alert('Failed to get list of currencies');
-      }
-    };
-
-    fetchData(); // Вызываем функцию для загрузки данных при монтировании компонента
+    fetchData();
   }, []);
 
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+  const containerStyle = {
+    flex: 1,    
+    
+  };
+  
+  const darkModeContainerStyle = {
+    ...containerStyle,
+    backgroundColor: 'black',
+  };
+  
+  const lightModeContainerStyle = {
+    ...containerStyle,
+    backgroundColor: 'white',
+  };
   return (
-    <View style={{ flex: 1 }}>
-      <PostCard />
+    <View style={isDarkMode ? darkModeContainerStyle : lightModeContainerStyle}>
+      <PostCard isDarkMode={isDarkMode} />
       <FlatList
-        data={currencyData ? [currencyData] : []} // Преобразуем данные в массив, так как FlatList ожидает массив
-        renderItem={({ item }) => <PostList currencyData={item} />} // Рендерим каждый элемент списка
-        keyExtractor={(item, index) => index.toString()} // Извлекаем ключ элемента списка
+        data={currencyData ? [currencyData] : []}
+        renderItem={({ item }) => <PostList currencyData={item} />}
+        keyExtractor={(item, index) => index.toString()}
       />
+      <BottomBar 
+      fetchData={fetchData}
+      isDarkMode={isDarkMode}
+      toggleTheme={toggleTheme} />
     </View>
   );
 };
@@ -88,7 +126,10 @@ const CurrencyScreen = () => {
 const CurrencyDetailsScreen = ()=>{
   const route = useRoute();
   const { currency, value } = route.params;
+  
   const result = "Your result";
+
+  
 
   return(
     <View style={appStyles.currencyResultContainer}>

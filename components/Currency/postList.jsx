@@ -12,6 +12,7 @@ const PostListCard = styled.View`
   border-radius: 10px;
   border-color: rgba(0, 0, 0, 0.1);
   margin: 5px;
+  margin-bottom: 10px;
 `;
 
 const PostCurrencyContainer = styled.View`
@@ -52,6 +53,15 @@ const PostNextText = styled.Text`
   color: white;
   font-weight: bold;
 `;
+
+const BottomBarCurrency = styled.View`
+flex-direction: row;
+ height: 10vh;
+ padding: 5px;
+ margin: 5px;
+`;
+
+
 
 export const PostList = ({ currencyData }) => {
 
