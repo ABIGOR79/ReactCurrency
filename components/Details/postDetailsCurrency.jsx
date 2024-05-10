@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import styled from 'styled-components/native';
 import { useNavigation } from '@react-navigation/native';
+
+
+
+
+
 
 
 const DetailCard = styled.View`
@@ -41,6 +46,7 @@ const DetailTextTry = styled.TextInput`
   border-radius: 10px;
   background-color: white;
   
+  
 `;
 
 const DetailResultTextView = styled.View`
@@ -68,21 +74,27 @@ const DetailResultText = styled.Text`
 `;
 
 
-export const CurrencyCard = ({ name, value, result}) =>{
 
- return(
-    <DetailCard>
-        <DetailText>Details</DetailText>
-        <DetailsResult>
-            <DetailTextTryView>
-                <DetailTextTry>TRY</DetailTextTry>
-            </DetailTextTryView>            
-            <DetailResultTextView>
-                <DetailTextName>"{name} = {value}"</DetailTextName>
-                <DetailResultText>{result}</DetailResultText>
-            </DetailResultTextView>
-        </DetailsResult>
 
-    </DetailCard>
- )
-}
+export const CurrencyCard = ({ name, value, result, textInputValue, setTextInputValue }) => {  
+
+  return (
+     <DetailCard>
+         <DetailText>Details</DetailText>
+         <DetailsResult>
+             <DetailTextTryView>
+                 <DetailTextTry
+                     value={textInputValue} 
+                     onChangeText={setTextInputValue}
+                     keyboardType="numeric"
+                 ></DetailTextTry>
+             </DetailTextTryView>            
+             <DetailResultTextView>
+                 <DetailTextName>"{name} = {value}"</DetailTextName>
+                 <DetailResultText>{result}</DetailResultText>
+             </DetailResultTextView>
+         </DetailsResult>
+     </DetailCard>
+  );
+ }
+

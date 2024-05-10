@@ -15,6 +15,11 @@ import { CurrencyCard} from './components/Details/postDetailsCurrency';
 import { useRoute } from '@react-navigation/native';
 import {URL, API_KEY, BASE_CURRENCY, getToday, getWeekAgo} from '../ReactCurrency/utils/utils'
 import BottomBar from './components/Currency/postBottomBar';
+import {ChartDetailCard} from './components/Details/chartsDetail';
+import { ResultButton } from './components/Details/resultDetails';
+
+
+
 
 
 // Компонент сплэш-экрана
@@ -55,11 +60,13 @@ const MainScreen = () => {
 
 const CurrencyScreen = () => {
   const [currencyData, setCurrencyData] = useState(null);
+  const [currencyAllData, setCurrencyAllData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [filteredCurrencyData, setFilteredCurrencyData] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState('');
   const [refreshFlag, setRefreshFlag] = useState(false);
+  const [currencyDifference, setCurrencyDifference] = useState({});
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -77,7 +84,19 @@ const CurrencyScreen = () => {
       const response = await fetch(url);
       const data = await response.json();
       const lastDate = Object.keys(data.response)[Object.keys(data.response).length - 1];
+
       setCurrencyData(data.response[lastDate]);
+      setCurrencyAllData(data.response)
+
+      // Вычисляем разницу для каждой валюты
+      const firstDate = Object.keys(data.response)[0];
+      const firstValue = data.response[firstDate];
+      const difference = {};
+      Object.keys(data.response[lastDate]).forEach(currency => {
+        difference[currency] = data.response[lastDate][currency] - firstValue[currency];
+      });
+      setCurrencyDifference(difference);
+
       setRefreshFlag(false); 
     } catch (error) {
       console.error('Error fetching currency data:', error);
@@ -150,7 +169,9 @@ const CurrencyScreen = () => {
       />
       <FlatList
         data={filteredCurrencyData || Object.entries(currencyData)}
-        renderItem={({ item }) => <PostList isDarkMode={isDarkMode} currencyData={{ [item[0]]: item[1] }} />}
+        renderItem={({ item }) =>
+         <PostList isDarkMode={isDarkMode} 
+        currencyData={{ [item[0]]: item[1] }} currencyDifference={currencyDifference} data = {currencyAllData} />}
         keyExtractor={(item) => item[0]}
       />
       <BottomBar 
@@ -160,24 +181,54 @@ const CurrencyScreen = () => {
       />
     </View>
   );
-}; 
-
-const CurrencyDetailsScreen = ()=>{
-  const route = useRoute();
-  const { currency, value } = route.params;
-  
-  const result = "Your result";
-
-  
-
-  return(
-    <View style={appStyles.currencyResultContainer}>
-      <CurrencyCard name={currency} value={value} result={result} />
-    </View>
-  )
-
 };
 
+const CurrencyDetailsScreen = () => {
+  const route = useRoute();
+  const { currency, value, difference, data } = route.params;
+  console.log('Currency Values:', data); 
+
+  // Получаем массив значений для выбранной валюты
+  const currencyValuesArray = Object.values(data)
+  .slice(0, 6)
+  .map(dayData => dayData[currency]);
+console.log('Currency Values Array:', currencyValuesArray);
+
+const [textInputValue, setTextInputValue] = useState('TRY');
+const [result, setResult] = useState(''); 
+
+const multiplyValue = (inputValue) => {
+  const parsedValue = parseFloat(inputValue);
+    // Проверяем, является ли введенное значение числом
+    if (!isNaN(parsedValue)) {
+      // Если число, умножаем его на значение валюты
+      return parsedValue * value;
+    } else {
+      // Если не число, возвращаем сообщение об ошибке
+      return 'Invalid input';
+    }
+}
+
+const handleResult = () => {
+  const resultValue = multiplyValue(textInputValue); 
+  setResult(resultValue); // Обновляем состояние с результатом
+};
+
+  return (
+    <View style={appStyles.currencyContainer}>
+      <CurrencyCard 
+    name={currency} 
+    value={value} 
+    result={result}
+    textInputValue={textInputValue}
+    setTextInputValue={setTextInputValue}
+/>
+      <ChartDetailCard currencyDifference={difference} currencyValues={currencyValuesArray} />   
+      <ResultButton onPress={handleResult}/>   
+      <BottomBar />
+    </View>
+  );
+};
 
 // Стилізований компонент Button
 const StyledButton = styled.Button` 

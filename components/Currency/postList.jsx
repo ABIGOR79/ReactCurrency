@@ -34,28 +34,33 @@ const PostCurrency = styled.Text`
 `;
 
 const PostCurrencyName = styled.Text`
-margin-start: 10px;
   font-size: 18px;
   color: ${props => props.isDarkMode ? 'white' : 'black'};
+  width: 100px; 
+  padding-start:20px;
 `;
 
+
 const PostValueView = styled.View`
-flex:1;
+
 flex-direction: column;
 justify-content: start;
+align-items: start;
 margin-left: 25px;
 `;
 
 
 const PostCurrencyValue = styled.Text`
   font-size: 18px;
+  text-align: left;
   color: ${props => props.isDarkMode ? 'white' : 'black'};
+  width: 100px; /* Примерно фиксированная ширина */
 `;
 
 const PostVauleDifference = styled.Text`
-font-size: 14px;
-color: black;
-
+  font-size: 14px;
+  text-align: left;
+  width: 100px; /* Примерно фиксированная ширина */
 `;
 
 const PostNextScreen = styled.View`
@@ -76,11 +81,12 @@ const PostNextText = styled.Text`
 
 
 
-export const PostList = ({ currencyData, isDarkMode }) => {
+export const PostList = ({ currencyData, currencyDifference, isDarkMode, data }) => {
   const navigation = useNavigation();
 
   const handleNextPressDetails = (currency, value) => {
-    navigation.navigate('CurrencyDetailsScreen', { currency, value });
+    const difference = currencyDifference[currency]; 
+    navigation.navigate('CurrencyDetailsScreen', { currency, value, difference, data });
   };
 
   return (
@@ -91,7 +97,19 @@ export const PostList = ({ currencyData, isDarkMode }) => {
             <PostCurrency>{getCurrencySymbol(currency)}</PostCurrency>
           </PostCurrencyContainer>
           <PostCurrencyName isDarkMode={isDarkMode}>{currency}</PostCurrencyName>
-          <PostCurrencyValue isDarkMode={isDarkMode}>{value}</PostCurrencyValue>
+          <PostValueView>
+            <PostCurrencyValue 
+              isDarkMode={isDarkMode}
+            >
+              {value.toFixed(5)}
+            </PostCurrencyValue>
+            <PostVauleDifference 
+              style={{ color: currencyDifference[currency] >= 0 ? 'green' : 'red' }}
+            >
+              {currencyDifference[currency].toFixed(5)}
+            </PostVauleDifference>
+          </PostValueView>
+          
           <TouchableOpacity onPress={() => handleNextPressDetails(currency, value)}>
             <PostNextScreen>
               <PostNextText>&gt;</PostNextText>
@@ -101,8 +119,7 @@ export const PostList = ({ currencyData, isDarkMode }) => {
       ))}
     </View>
   );
-
-}; 
+};
 
 
 

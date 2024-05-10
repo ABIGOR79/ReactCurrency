@@ -13,6 +13,22 @@ export const getWeekAgo = () => {
   return weekAgo.toISOString().split('T')[0]; // Форматируем дату в формат yyyy-mm-dd
 }
 
+export const getDaysBetweenDates = () => {
+    const today = new Date(); // Получаем текущую дату
+    const days = [];
+
+    for (let i = 5; i >= 0; i--) {
+        const currentDate = new Date(today);
+        currentDate.setDate(currentDate.getDate() - i); // Уменьшаем текущую дату на i дней
+        const day = String(currentDate.getDate()).padStart(2, '0'); // День с ведущим нулем (если необходимо)
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0'); // Месяц с ведущим нулем (если необходимо)
+        const formattedDate = `${day}.${month}`; // Форматированная дата в виде "dd.mm"
+        days.push(formattedDate);
+    }
+
+    return days;
+};
+
 export const getCurrencySymbol = (currencyCode) => {
   switch (currencyCode) {
       case "USD":
@@ -442,6 +458,6 @@ export const getCurrencySymbol = (currencyCode) => {
       case "ZWL":
           return "Z\$";
       default:
-          return "";
+          return currencyCode;
   }
 };
