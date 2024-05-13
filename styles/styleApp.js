@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import secondStyle from 'styled-components/native'
+
 
 // Стили
 const appStyles = StyleSheet.create({
@@ -29,7 +29,19 @@ const appStyles = StyleSheet.create({
       flex:1,
       flexdirection: 'column',
 
+
     },
+    CurrencyContainerDark :{
+      flex: 1,
+      backgroundColor: 'black', /* Цвет заднего фона для темной темы */
+    }  
+,
+
+    CurrencyContainerLight :{
+      flex: 1,
+      backgroundColor: 'black', /* Цвет заднего фона для темной темы */
+    }  
+,
 
     button: {
       backgroundColor: 'blue',

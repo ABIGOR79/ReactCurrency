@@ -86,8 +86,10 @@ export const PostList = ({ currencyData, currencyDifference, isDarkMode, data })
 
   const handleNextPressDetails = (currency, value) => {
     const difference = currencyDifference[currency]; 
-    navigation.navigate('CurrencyDetailsScreen', { currency, value, difference, data });
+    const newIsDarkMode = !isDarkMode;
+    navigation.navigate('CurrencyDetailsScreen', { currency, value, difference, data, newIsDarkMode });
   };
+  const newIsDarkMode = !isDarkMode;
 
   return (
     <View>

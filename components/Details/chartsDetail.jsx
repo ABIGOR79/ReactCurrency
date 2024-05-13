@@ -18,14 +18,17 @@ margin-right: 5px;
 const DetailChartText = styled.Text`
 margin-top: 30px;
 font-size: 16px;
+padding-left: 15px;
 `;
 const DetailChartWeek = styled.Text`
 
 font-size: 14px;
+padding-left: 15px;
 `;
 
 const DetailDif = styled.Text`
 font-size: 14px;
+padding-left: 15px;
 
 `;
 const ChartContainer = styled.View`

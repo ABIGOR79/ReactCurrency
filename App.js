@@ -15,6 +15,7 @@ import { CurrencyCard} from './components/Details/postDetailsCurrency';
 import { useRoute } from '@react-navigation/native';
 import {URL, API_KEY, BASE_CURRENCY, getToday, getWeekAgo} from '../ReactCurrency/utils/utils'
 import BottomBar from './components/Currency/postBottomBar';
+import DetailBottomBar from './components/Details/detailBottomBar'
 import {ChartDetailCard} from './components/Details/chartsDetail';
 import { ResultButton } from './components/Details/resultDetails';
 
@@ -31,46 +32,35 @@ const SplashScreen = () => {
   );
 };
 
-// Компонент основного экрана
 const MainScreen = () => {
-
   const navigation = useNavigation();
 
   const handleNextPress = () => {
-    navigation.navigate('CurrencyScreen'); // Переход на экран CurrencyScreen
+    navigation.navigate('CurrencyScreen');
   };
+
   return (
     <View style={appStyles.container}>
-      {/* <StatusBar barStyle="dark-content" /> */}
-      <StatusBar theme = "auto"/>
+      <StatusBar theme="auto" />
       <PostRates>
-        <PostText>
-          Currency of
-        </PostText>
-        <PostText>
-          all the world
-        </PostText>
+        <PostText>Currency of</PostText>
+        <PostText>all the world</PostText>
         <TouchableOpacity style={appStyles.button} onPress={handleNextPress}>
-      <Text style={appStyles.buttonText}>Next</Text>
-    </TouchableOpacity>
-        </PostRates>      
+          <Text style={appStyles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </PostRates>
     </View>
   );
 };
 
-const CurrencyScreen = () => {
+const CurrencyScreen = ({ isDarkMode, toggleTheme }) => {
   const [currencyData, setCurrencyData] = useState(null);
   const [currencyAllData, setCurrencyAllData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [filteredCurrencyData, setFilteredCurrencyData] = useState(null);
   const [selectedCurrency, setSelectedCurrency] = useState('');
   const [refreshFlag, setRefreshFlag] = useState(false);
   const [currencyDifference, setCurrencyDifference] = useState({});
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const fetchData = async () => {
     try {
@@ -86,14 +76,14 @@ const CurrencyScreen = () => {
       const lastDate = Object.keys(data.response)[Object.keys(data.response).length - 1];
 
       setCurrencyData(data.response[lastDate]);
-      setCurrencyAllData(data.response)
+      setCurrencyAllData(data.response);
 
-      // Вычисляем разницу для каждой валюты
       const firstDate = Object.keys(data.response)[0];
       const firstValue = data.response[firstDate];
+      const lastValue = data.response[lastDate];
       const difference = {};
-      Object.keys(data.response[lastDate]).forEach(currency => {
-        difference[currency] = data.response[lastDate][currency] - firstValue[currency];
+      Object.keys(lastValue).forEach(currency => {
+        difference[currency] = lastValue[currency] - firstValue[currency];
       });
       setCurrencyDifference(difference);
 
@@ -117,9 +107,9 @@ const CurrencyScreen = () => {
   }, [currencyData]);
 
   const filterSearch = (text) => {
-    const searchText = text.substring(0, 3).toUpperCase(); // Ограничиваем длину строки тремя символами и преобразуем в верхний регистр
+    const searchText = text.substring(0, 3).toUpperCase();
     
-    if (searchText.length === 3) { // Проверяем, достигла ли длина строки 3 символов
+    if (searchText.length === 3) {
       const filteredList = Object.entries(currencyData).filter(([name]) =>
         name.toUpperCase().startsWith(searchText)
       );
@@ -130,8 +120,8 @@ const CurrencyScreen = () => {
   };
 
   const refreshPage = () => {
-    setRefreshFlag(true); 
-    setSelectedCurrency(''); 
+    setRefreshFlag(true);
+    setSelectedCurrency('');
     filterSearch('');
   };
 
@@ -146,20 +136,11 @@ const CurrencyScreen = () => {
 
   const containerStyle = {
     flex: 1,
-  };
-  
-  const darkModeContainerStyle = {
-    ...containerStyle,
-    backgroundColor: 'black',
-  };
-  
-  const lightModeContainerStyle = {
-    ...containerStyle,
-    backgroundColor: 'white',
+    backgroundColor: isDarkMode ? 'black' : 'white',
   };
 
   return (
-    <View style={isDarkMode ? darkModeContainerStyle : lightModeContainerStyle}>
+    <View style={containerStyle}>
       <PostCard 
         isDarkMode={isDarkMode} 
         filterSearch={filterSearch} 
@@ -170,8 +151,13 @@ const CurrencyScreen = () => {
       <FlatList
         data={filteredCurrencyData || Object.entries(currencyData)}
         renderItem={({ item }) =>
-         <PostList isDarkMode={isDarkMode} 
-        currencyData={{ [item[0]]: item[1] }} currencyDifference={currencyDifference} data = {currencyAllData} />}
+          <PostList 
+            isDarkMode={isDarkMode} 
+            currencyData={{ [item[0]]: item[1] }} 
+            currencyDifference={currencyDifference} 
+            data={currencyAllData} 
+          />
+        }
         keyExtractor={(item) => item[0]}
       />
       <BottomBar 
@@ -183,52 +169,114 @@ const CurrencyScreen = () => {
   );
 };
 
-const CurrencyDetailsScreen = () => {
+const CurrencyDetailsScreen = ({ isDarkMode, toggleTheme }) => {
   const route = useRoute();
+  const navigation = useNavigation();
   const { currency, value, difference, data } = route.params;
-  console.log('Currency Values:', data); 
+  
+  const currencyValuesArray = Object.values(data).slice(0, 6).map(dayData => dayData[currency]);
 
-  // Получаем массив значений для выбранной валюты
-  const currencyValuesArray = Object.values(data)
-  .slice(0, 6)
-  .map(dayData => dayData[currency]);
-console.log('Currency Values Array:', currencyValuesArray);
+  const [textInputValue, setTextInputValue] = useState('TRY');
+  const [result, setResult] = useState('');
 
-const [textInputValue, setTextInputValue] = useState('TRY');
-const [result, setResult] = useState(''); 
-
-const multiplyValue = (inputValue) => {
-  const parsedValue = parseFloat(inputValue);
-    // Проверяем, является ли введенное значение числом
+  const multiplyValue = (inputValue) => {
+    const parsedValue = parseFloat(inputValue);
     if (!isNaN(parsedValue)) {
-      // Если число, умножаем его на значение валюты
       return parsedValue * value;
     } else {
-      // Если не число, возвращаем сообщение об ошибке
       return 'Invalid input';
     }
-}
+  };
 
-const handleResult = () => {
-  const resultValue = multiplyValue(textInputValue); 
-  setResult(resultValue); // Обновляем состояние с результатом
-};
+  const handleResult = () => {
+    const resultValue = multiplyValue(textInputValue); 
+    setResult(resultValue);
+  };
+
+  const handleBackPress = () => {
+    navigation.navigate('CurrencyScreen');
+  };
 
   return (
-    <View style={appStyles.currencyContainer}>
+    <View style={{ flex: 1, backgroundColor: isDarkMode ? 'black' : 'white' }}>
       <CurrencyCard 
-    name={currency} 
-    value={value} 
-    result={result}
-    textInputValue={textInputValue}
-    setTextInputValue={setTextInputValue}
-/>
-      <ChartDetailCard currencyDifference={difference} currencyValues={currencyValuesArray} />   
+        name={currency} 
+        value={value} 
+        result={result}
+        textInputValue={textInputValue}
+        setTextInputValue={setTextInputValue}
+      />
+      <ChartDetailCard 
+        currencyDifference={difference} 
+        currencyValues={currencyValuesArray} 
+      />   
       <ResultButton onPress={handleResult}/>   
-      <BottomBar />
+      <DetailBottomBar 
+        backToCurrency={handleBackPress}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
+      />
     </View>
   );
 };
+
+const Stack = createStackNavigator();
+
+const App = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        {showSplash ? (
+          <Stack.Screen name="SplashScreen" component={SplashScreen} options={{ headerShown: false }} />
+        ) : (
+          <>
+            <Stack.Screen name="MainScreen" component={MainScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="CurrencyScreen">
+              {(props) => <CurrencyScreen {...props} isDarkMode={isDarkMode} toggleTheme={toggleTheme} options={{ headerShown: false }} />}
+            </Stack.Screen>
+            <Stack.Screen name="CurrencyDetailsScreen">
+              {(props) => <CurrencyDetailsScreen {...props} isDarkMode={isDarkMode} toggleTheme={toggleTheme} options={{ headerShown: false }} />}
+            </Stack.Screen>
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+  // return (
+  //   <NavigationContainer>
+  //     <Stack.Navigator>
+  //       {showSplash ? (
+  //         <Stack.Screen name="SplashScreen" component={SplashScreen} options={{ headerShown: false }} />
+  //       ) : (
+  //         <>
+  //           <Stack.Screen name="MainScreen" component={MainScreen} options={{ headerShown: false }} />
+  //           <Stack.Screen name="CurrencyScreen" component={CurrencyScreen} options={{ headerShown: false }} />
+  //           <Stack.Screen name="CurrencyDetailsScreen" component={CurrencyDetailsScreen} options={{ headerShown: false }} />
+  //         </>
+  //       )}
+  //     </Stack.Navigator>
+  //   </NavigationContainer>
+  // );
+};
+
+export default App;
 
 // Стилізований компонент Button
 const StyledButton = styled.Button` 
@@ -250,39 +298,4 @@ const PostText = styled.Text`
   font-weight: bold;
   color: black;
 `;
-
-const Stack = createStackNavigator();
-
-const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        {showSplash ? (
-          <Stack.Screen name="SplashScreen" component={SplashScreen} options={{ headerShown: false }} />
-        ) : (
-          <>
-            <Stack.Screen name="MainScreen" component={MainScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="CurrencyScreen" component={CurrencyScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="CurrencyDetailsScreen" component={CurrencyDetailsScreen} options={{ headerShown: false }} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-};
-
-export default App;
-
-
 
